@@ -337,7 +337,7 @@ int main()
 
 		/* Master Reset */
 		status = WriteGPIOPin(GPIODir,&GPIOVal,MASTER_RESET,1);
-		usleep(10);	//Minimum pulse width is 5 SYSCLK period
+		usleep(20);	//Minimum pulse width is 5 SYSCLK period
 		status = WriteGPIOPin(GPIODir,&GPIOVal,MASTER_RESET,0);
 		usleep(150); //Recovery time from full sleep mode
 
