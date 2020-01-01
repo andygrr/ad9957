@@ -55,4 +55,6 @@
 #define MASTER_RESET    2
 #define IO_UPDATE       3
 
+#define FS_RATE 1e9
+
 #endif

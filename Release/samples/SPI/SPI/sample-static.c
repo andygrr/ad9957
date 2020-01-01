@@ -255,6 +255,14 @@ static FT_STATUS WriteRegBit(uint8 address,uint8 *val,uint8 size,uint8 bytenum,u
 	return status;
 }
 
+void changeF2W(double freq,uint8* b){
+	uint32 a;
+	a = (uint32)(freq/FS_RATE*4294967296);
+	b[7] = a;
+	b[6] = a>>8;
+	b[5] = a>>16;
+	b[4] = a>>24;
+}
 /*!
  * \brief Main function / Entry point to the sample application
  *
@@ -287,9 +295,10 @@ int main()
 	uint8 CFR1Val[CFR1_W] = {0x00,0x00,0x00,0x00};
 	uint8 CFR2Val[CFR2_W] = {0x00,0x00,0x00,0x00};
 	uint8 IO_UP_RATEVal[IO_UP_RATE_W] = {0x00,0x00,0x01,0x00}; //256 div
-	uint8 PROFILE0Val[PROFILE0_W] = {0x3F,0xFF, 0x00,0x00, 0x11,0xEB,0x85,0x1F}; //2'b00,14'd16383,16'd0,32'd300647711
-	
-	channelConf.ClockRate = 5000; //div 5 for sclk frequency on FT232D
+	uint8 PROFILE0Val[PROFILE0_W] = {0x1F,0xFF, 0x00,0x00, 0x11,0xEB,0x85,0x1F}; //2'b00,14'd16383,16'd0,32'd300647711
+	uint32 frequncyWord = 0;
+
+	channelConf.ClockRate = 200e3; //div 5 for sclk frequency on FT232D
 	channelConf.LatencyTimer = latency;
 	channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;// | SPI_CONFIG_OPTION_CS_ACTIVELOW;
 	channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
@@ -446,16 +455,23 @@ int main()
 		printf("\n");
 
 		/* Set Profile0 */
-		address = PROFILE0;
-		size = PROFILE0_W;
-		data = PROFILE0Val; // div SYSCLK/4/2^A/B , 256 here
-		writeReg(address,data,size);
-		printf("Write Reg %2x done : ",address);
-		for(int i=0;i<size;i++){
-			printf("%2x ",data[i]);
+		for(int i=0;i<10;i++){
+			for(int frequency = 0;frequency<100e6;frequency+=20e3){
+				address = PROFILE0;
+				size = PROFILE0_W;
+				changeF2W(frequency,PROFILE0Val);
+				data = PROFILE0Val;
+				writeReg(address,data,size);
+				#if(0)
+				printf("Write Reg %2x done : ",address);
+				for(int i=0;i<size;i++){
+					printf("%2x ",data[i]);
+				}
+				printf("\n");
+				#endif
+				usleep(1);
+			}
 		}
-		printf("\n");
-		usleep(10);
 		// getchar();
 
 		readReg(address,data,size);
